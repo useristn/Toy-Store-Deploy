@@ -1,10 +1,10 @@
-# fly.toml app configuration file generated for toy-store-deploy on 2025-10-30T09:37:24Z
+# fly.toml app configuration file generated for toy-store-web on 2025-10-30T10:04:00Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'toy-store-deploy'
-primary_region = 'iad'
+app = 'toy-store-web'
+primary_region = 'sin'
 
 [build]
 
