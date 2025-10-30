@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: toy-store-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: toy_store
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: toystore
+      MYSQL_PASSWORD: toystorepass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - toy-store-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Spring Boot Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: toy-store-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Database configuration
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/toy_store?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: toystore
+      SPRING_DATASOURCE_PASSWORD: toystorepass
+      
+      # Active profile
+      SPRING_PROFILES_ACTIVE: docker
+      
+      # Mail configuration (giữ nguyên từ application.properties)
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: thanhnhatcyber@gmail.com
+      SPRING_MAIL_PASSWORD: "cmzk qrca ilrg knnt"
+      
+      # Gemini API
+      GEMINI_API_KEY: AIzaSyBulyMzFMUJTp0TlV4nbRKs-pOqH09GNsQ
+      
+      # Cloudinary (cập nhật với thông tin thực của bạn)
+      CLOUDINARY_CLOUD_NAME: YOUR_CLOUD_NAME
+      CLOUDINARY_API_KEY: YOUR_API_KEY
+      CLOUDINARY_API_SECRET: YOUR_API_SECRET
+      
+      # VNPay
+      VNPAY_TMN_CODE: 3KNLXOCI
+      VNPAY_HASH_SECRET: EEBZQRI2M5XTMAXNYPVQNBL64IZUDO3S
+      VNPAY_PAY_URL: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+      VNPAY_RETURN_URL: http://localhost:8080/api/payment/vnpay/return
+      VNPAY_IPN_URL: http://localhost:8080/api/payment/vnpay/ipn
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - toy-store-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  mysql-data:
+    driver: local
+
+networks:
+  toy-store-network:
+    driver: bridge
